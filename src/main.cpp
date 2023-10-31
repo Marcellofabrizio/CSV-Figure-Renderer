@@ -1,25 +1,98 @@
 #include <Shader.h>
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
+#include <shader_utils.h>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
+#include <sstream>
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window);
 
-// settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
 unsigned int VBO, VAO;
 unsigned int texture1, texture2;
 
+int getFileSize(const std::string &filename)
+{
+  std::ifstream fileReadLines(filename);
+  if (!fileReadLines.is_open())
+  {
+    std::cerr << "Failed to open " << filename << std::endl;
+    exit(1);
+  }
+
+  int size;
+  std::string parseLine;
+  for (size = 0; std::getline(fileReadLines, parseLine); size++)
+    ;
+
+  std::cout << "Total lines in file: " << size << std::endl;
+
+  fileReadLines.close();
+
+  return size;
+}
+
+float *readCSV(const std::string &filename, int size)
+{
+
+  std::cout << "Reading " << filename << std::endl;
+  float *points = (float *)malloc(((size + 1) * 3) * sizeof(float));
+
+  std::ifstream file(filename);
+  std::string line;
+
+  if (!file.is_open())
+  {
+    std::cerr << "Failed to open " << filename << std::endl;
+    exit(1);
+  }
+
+  int count = 0;
+  while (std::getline(file, line))
+  {
+    float x, y, z;
+    std::istringstream iss(line);
+    std::cout << "Line: " << line.c_str() << std::endl;
+    if (sscanf(line.c_str(), "%f, %f, %f", &x, &y, &z) == 3)
+    {
+      std::cout << "Pushing " << x << " " << y << " " << z << std::endl;
+      points[count] = x;
+      points[count + 1] = y;
+      points[count + 2] = z;
+
+      count += 3;
+    }
+    else
+    {
+      std::cerr << "Error parsing line " << line << std::endl;
+    }
+  }
+
+  file.close();
+
+  return points;
+}
+
 int init_resources()
 {
+
+  std::string fileName = "/home/marcello/Repositories/CSV-Shadder/points/cube.csv";
+  int fileSize = getFileSize(fileName);
+  float *points = readCSV(fileName, fileSize);
+
+  for (int i = 0; i < fileSize * 3; i++)
+  {
+    std::cout << i << " " << points[i] << std::endl;
+  }
+
   float vertices[] = {
       -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.5f, -0.5f, -0.5f, 1.0f, 0.0f,
       0.5f, 0.5f, -0.5f, 1.0f, 1.0f, 0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
@@ -49,8 +122,10 @@ int init_resources()
 
   glBindVertexArray(VAO);
 
+  std::cout << sizeof(points[0]) << std::endl;
+
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(fileSize * sizeof(float)), points, GL_STATIC_DRAW);
 
   // position attribute
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
@@ -114,6 +189,8 @@ int init_resources()
     std::cout << "Failed to load texture" << std::endl;
   }
   stbi_image_free(data);
+
+  return 1;
 }
 
 int main()
@@ -160,7 +237,12 @@ int main()
 
   // set up vertex data (and buffer(s)) and configure vertex attributes
   // ------------------------------------------------------------------
-  init_resources();
+  if (!init_resources())
+  {
+    std::cout << "Failed to initiate resources" << std::endl;
+    glfwTerminate();
+    return -1;
+  }
 
   Shader ourShader("/home/marcello/Repositories/CSV-Shadder/shaders/vertex.glsl", "/home/marcello/Repositories/CSV-Shadder/shaders/fragment.glsl");
   // tell opengl for each sampler to which texture unit it belongs to (only has
@@ -208,15 +290,10 @@ int main()
     projection =
         glm::perspective(glm::radians(45.0f),
                          (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-    // retrieve the matrix uniform locations
     unsigned int modelLoc = glGetUniformLocation(ourShader.ID, "model");
     unsigned int viewLoc = glGetUniformLocation(ourShader.ID, "view");
-    // pass them to the shaders (3 different ways)
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
     glUniformMatrix4fv(viewLoc, 1, GL_FALSE, &view[0][0]);
-    // note: currently we set the projection matrix each frame, but since the
-    // projection matrix rarely changes it's often best practice to set it
-    // outside the main loop only once.
     ourShader.setMat4("projection", projection);
 
     // render box
