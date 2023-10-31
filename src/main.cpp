@@ -9,6 +9,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 #include <sstream>
+#include <vector>
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window);
@@ -19,32 +20,11 @@ const unsigned int SCR_HEIGHT = 600;
 unsigned int VBO, VAO;
 unsigned int texture1, texture2;
 
-int getFileSize(const std::string &filename)
-{
-  std::ifstream fileReadLines(filename);
-  if (!fileReadLines.is_open())
-  {
-    std::cerr << "Failed to open " << filename << std::endl;
-    exit(1);
-  }
-
-  int size;
-  std::string parseLine;
-  for (size = 0; std::getline(fileReadLines, parseLine); size++)
-    ;
-
-  std::cout << "Total lines in file: " << size << std::endl;
-
-  fileReadLines.close();
-
-  return size;
-}
-
-float *readCSV(const std::string &filename, int size)
+std::vector<float> readCSV(const std::string &filename)
 {
 
   std::cout << "Reading " << filename << std::endl;
-  float *points = (float *)malloc(((size + 1) * 3) * sizeof(float));
+  std::vector<float> points;
 
   std::ifstream file(filename);
   std::string line;
@@ -64,11 +44,9 @@ float *readCSV(const std::string &filename, int size)
     if (sscanf(line.c_str(), "%f, %f, %f", &x, &y, &z) == 3)
     {
       std::cout << "Pushing " << x << " " << y << " " << z << std::endl;
-      points[count] = x;
-      points[count + 1] = y;
-      points[count + 2] = z;
-
-      count += 3;
+      points.push_back(x);
+      points.push_back(y);
+      points.push_back(z);
     }
     else
     {
@@ -85,13 +63,9 @@ int init_resources()
 {
 
   std::string fileName = "/home/marcello/Repositories/CSV-Shadder/points/cube.csv";
-  int fileSize = getFileSize(fileName);
-  float *points = readCSV(fileName, fileSize);
+  std::vector<float> points = readCSV(fileName);
 
-  for (int i = 0; i < fileSize * 3; i++)
-  {
-    std::cout << i << " " << points[i] << std::endl;
-  }
+  std::cout << points.size() << std::endl;
 
   float vertices[] = {
       -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.5f, -0.5f, -0.5f, 1.0f, 0.0f,
@@ -122,10 +96,8 @@ int init_resources()
 
   glBindVertexArray(VAO);
 
-  std::cout << sizeof(points[0]) << std::endl;
-
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(fileSize * sizeof(float)), points, GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, points.size() * sizeof(float), (const void *)&points[0], GL_STATIC_DRAW);
 
   // position attribute
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
