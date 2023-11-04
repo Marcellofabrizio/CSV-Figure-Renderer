@@ -131,7 +131,7 @@ int load_texture(const std::string &texture_filename)
   stbi_set_flip_vertically_on_load(
       true); // tell stb_image.h to flip loaded texture's on the y-axis.
   unsigned char *data =
-      stbi_load("/home/marcello/Repositories/CSV-Shadder/res/images/pedra-28.jpg", &width, &height, &nrChannels, 0);
+      stbi_load(texture_filename.c_str(), &width, &height, &nrChannels, 0);
   if (data)
   {
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
