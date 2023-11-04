@@ -143,47 +143,27 @@ int load_texture(const std::string &texture_filename)
     std::cout << "Failed to load texture" << std::endl;
   }
   stbi_image_free(data);
-  // texture 2
-  // ---------
-  glGenTextures(1, &texture2);
-  glBindTexture(GL_TEXTURE_2D, texture2);
-  // set the texture wrapping parameters
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  // set texture filtering parameters
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  // load image, create texture and generate mipmaps
-  data = stbi_load("/home/marcello/Repositories/CSV-Shadder/res/images/opengl.png", &width, &height, &nrChannels, 0);
-  if (data)
-  {
-    // note that the awesomeface.png has transparency and thus an alpha channel,
-    // so make sure to tell OpenGL the data type is of GL_RGBA
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
-                 GL_UNSIGNED_BYTE, data);
-    glGenerateMipmap(GL_TEXTURE_2D);
-  }
-  else
-  {
-    std::cout << "Failed to load texture" << std::endl;
-  }
-  stbi_image_free(data);
 
   return 1;
 }
 
-int main()
+int main(int argc, char *argv[])
 {
+
+  if (argc != 2)
+  {
+    std::cerr << "Usage: csv_shader <csv-file>";
+    return -1;
+  }
+
+  std::string fileName = argv[1];
+
   // glfw: initialize and configure
   // ------------------------------
   glfwInit();
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-#ifdef __APPLE__
-  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-#endif
 
   // glfw window creation
   // --------------------
@@ -214,14 +194,29 @@ int main()
   // -----------------------------
   glEnable(GL_DEPTH_TEST);
 
-  // set up vertex data (and buffer(s)) and configure vertex attributes
-  // ------------------------------------------------------------------
-  if (!init_resources())
-  {
-    std::cout << "Failed to initiate resources" << std::endl;
-    glfwTerminate();
-    return -1;
-  }
+  std::vector<float> points = readVerticesFromFile(fileName);
+  std::string textureFile = readTextureLocationFromFile(fileName);
+
+  std::cout << textureFile << std::endl;
+  std::cout << points.size() << std::endl;
+
+  glGenVertexArrays(1, &VAO);
+  glGenBuffers(1, &VBO);
+
+  glBindVertexArray(VAO);
+
+  glBindBuffer(GL_ARRAY_BUFFER, VBO);
+  glBufferData(GL_ARRAY_BUFFER, points.size() * sizeof(float), (const void *)&points[0], GL_STATIC_DRAW);
+
+  // position attribute
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
+  glEnableVertexAttribArray(0);
+  // texture coord attribute
+  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
+                        (void *)(3 * sizeof(float)));
+  glEnableVertexAttribArray(1);
+
+  load_texture(textureFile);
 
   Shader ourShader("/home/marcello/Repositories/CSV-Shadder/shaders/vertex.glsl", "/home/marcello/Repositories/CSV-Shadder/shaders/fragment.glsl");
   // tell opengl for each sampler to which texture unit it belongs to (only has
