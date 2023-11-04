@@ -20,7 +20,24 @@ const unsigned int SCR_HEIGHT = 600;
 unsigned int VBO, VAO;
 unsigned int texture1, texture2;
 
-std::vector<float> readCSV(const std::string &filename)
+int getNumberOfLinesInFile(const std::string &filename)
+{
+  std::cout << "Reading " << filename << std::endl;
+
+  std::ifstream file(filename);
+  std::string _line;
+  int lineCount = 0;
+
+  while (std::getline(file, _line))
+  {
+    lineCount++;
+  }
+
+  file.close();
+  return lineCount;
+}
+
+std::vector<float> readVerticesFromFile(const std::string &filename)
 {
 
   std::cout << "Reading " << filename << std::endl;
@@ -28,6 +45,8 @@ std::vector<float> readCSV(const std::string &filename)
 
   std::ifstream file(filename);
   std::string line;
+
+  int numberOfLines = getNumberOfLinesInFile(filename);
 
   if (!file.is_open())
   {
@@ -40,10 +59,12 @@ std::vector<float> readCSV(const std::string &filename)
   {
     float x, y, z;
     std::istringstream iss(line);
-    std::cout << "Line: " << line.c_str() << std::endl;
-    if (sscanf(line.c_str(), "%f, %f, %f", &x, &y, &z) == 3)
+    if (count + 1 == numberOfLines)
     {
-      std::cout << "Pushing " << x << " " << y << " " << z << std::endl;
+      std::cout << "Reached end of file" << std::endl;
+    }
+    else if (sscanf(line.c_str(), "%f, %f, %f", &x, &y, &z) == 3)
+    {
       points.push_back(x);
       points.push_back(y);
       points.push_back(z);
@@ -52,6 +73,8 @@ std::vector<float> readCSV(const std::string &filename)
     {
       std::cerr << "Error parsing line " << line << std::endl;
     }
+
+    count++;
   }
 
   file.close();
