@@ -15,7 +15,7 @@ OBJS = $(patsubst $(SRC_DIR)/%.cpp,$(BUILD_DIR)/%.o,$(SRCS))
 
 INCLUDES = -I$(INC_DIR) -I$(UTILS_DIR)
 
-TARGET = my_program
+TARGET = csv_shader
 
 .PHONY: all clean
 
