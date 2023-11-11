@@ -73,7 +73,7 @@ std::vector<float> readVerticesFromFile(const std::string &filename)
     {
       std::cout << "Reached end of file" << std::endl;
     }
-    else if (sscanf(line.c_str(), "%f %f %f %f %f %f %f %f", &x, &y, &z, &r, &g, &b, &t1, &t2) == 8)
+    else if (sscanf(line.c_str(), "%f,%f,%f,%f,%f,%f,%f,%f", &x, &y, &z, &r, &g, &b, &t1, &t2) == 8)
     {
       points.push_back(x);
       points.push_back(y);
