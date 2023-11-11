@@ -25,7 +25,7 @@ const int MAX_VERTICES = 45;
 const float MIN_VELOCIDADE = 1.0f;
 const float MAX_VELOCIDADE = 10.0f;
 
-int velocidade =1;
+int velocidade = 1;
 int quantosVertices = MAX_VERTICES;
 int preenchimento = 1;
 int numberOfLines = 0;
@@ -83,7 +83,6 @@ std::vector<float> readVerticesFromFile(const std::string &filename)
       points.push_back(b);
       points.push_back(t1);
       points.push_back(t2);
-
     }
     else
     {
@@ -213,214 +212,161 @@ int main(int argc, char *argv[])
   std::vector<float> points = readVerticesFromFile(fileName);
   std::string textureFile = readTextureLocationFromFile(fileName);
 
-    // build and compile our shader zprogram
-    // ------------------------------------
-    Shader ourShader("/home/marcello/Repositories/CSV-Shadder/shaders/vertex.glsl", "/home/marcello/Repositories/CSV-Shadder/shaders/fragment.glsl");
+  // build and compile our shader zprogram
+  // ------------------------------------
+  Shader ourShader("/home/marcello/Repositories/CSV-Shadder/shaders/vertex.glsl", "/home/marcello/Repositories/CSV-Shadder/shaders/fragment.glsl");
 
-    // set up vertex data (and buffer(s)) and configure vertex attributes
-    // ------------------------------------------------------------------
+  // set up vertex data (and buffer(s)) and configure vertex attributes
+  // ------------------------------------------------------------------
 
-    glfwSetInputMode(window, GLFW_STICKY_KEYS, GLFW_TRUE);
+  glfwSetInputMode(window, GLFW_STICKY_KEYS, GLFW_TRUE);
 
-    // float vertices[] = {
+  unsigned int VBO, VAO;
+  glGenVertexArrays(1, &VAO);
+  glGenBuffers(1, &VBO);
 
-    //     // Eixos
+  glBindVertexArray(VAO);
 
-    //     // x
-    //     -0.95f,  0.0f,  0.0f,   1.0f, 0.0f, 0.0f,   0.0f, 1.0f,
-    //      0.95f,  0.0f,  0.0f,   1.0f, 0.0f, 0.0f,   0.0f, 1.0f,
-    //     -0.95f,  0.0f,  0.0f,   1.0f, 0.0f, 0.0f,   0.0f, 1.0f,
+  glBindBuffer(GL_ARRAY_BUFFER, VBO);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(float) * points.size(), (const void *)&points[0], GL_STATIC_DRAW);
 
-    //     // y
-    //      0.0f, -0.95f,  0.0f,   0.0f, 0.5f, 0.5f,   0.0f, 1.0f,
-    //      0.0f,  0.95f,  0.0f,   0.0f, 0.5f, 0.5f,   0.0f, 1.0f,
-    //      0.0f, -0.95f,  0.0f,   0.0f, 0.5f, 0.5f,   0.0f, 1.0f,
+  // position attribute
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
+  glEnableVertexAttribArray(0);
+  // color attribute
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(3 * sizeof(float)));
+  glEnableVertexAttribArray(1);
+  // texture coord attribute
+  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(3 * sizeof(float)));
+  glEnableVertexAttribArray(2);
 
-    //     // z
-    //      0.0f,  0.0f, -0.95f,   1.0f, 0.0f, 1.0f,   0.0f, 1.0f,
-    //      0.0f,  0.0f,  0.95f,   1.0f, 0.0f, 1.0f,   0.0f, 1.0f,
-    //      0.0f,  0.0f, -0.95f,   1.0f, 0.0f, 1.0f,   0.0f, 1.0f,
+  // Manda desenhar somente wireframe
+  if (!preenchimento)
+  {
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+  }
 
-    //      // Faces
-    //     -0.5f, -0.5f, -0.5f,   0.7f, 0.25f, 0.0f,   0.0f, 0.0f,
-    //      0.5f, -0.5f, -0.5f,   0.7f, 0.25f, 0.0f,   1.0f, 0.0f,
-    //      0.5f,  0.5f, -0.5f,   0.7f, 0.25f, 0.0f,   1.0f, 1.0f,
-    //      0.5f,  0.5f, -0.5f,   0.0f, 0.25f, 0.7f,   1.0f, 1.0f,
-    //     -0.5f,  0.5f, -0.5f,   0.0f, 0.25f, 0.7f,   0.0f, 1.0f,
-    //     -0.5f, -0.5f, -0.5f,   0.0f, 0.25f, 0.7f,   0.0f, 0.0f,
+  // render loop
+  // -----------
+  while (!glfwWindowShouldClose(window))
+  {
 
-    //     -0.5f, -0.5f,  0.5f,   0.0f, 0.7f, 0.0f,   0.0f, 0.0f,
-    //      0.5f, -0.5f,  0.5f,   0.0f, 0.7f, 0.0f,   1.0f, 0.0f,
-    //      0.5f,  0.5f,  0.5f,   0.0f, 0.7f, 0.0f,   1.0f, 1.0f,
-    //      0.5f,  0.5f,  0.5f,   0.0f, 0.0f, 0.7f,   1.0f, 1.0f,
-    //     -0.5f,  0.5f,  0.5f,   0.0f, 0.0f, 0.7f,   0.0f, 1.0f,
-    //     -0.5f, -0.5f,  0.5f,   0.0f, 0.0f, 0.7f,   0.0f, 0.0f,
+    // input
+    // -----
+    processInput(window);
 
-    //     -0.5f,  0.5f,  0.5f,   0.0f, 0.7f, 0.7f,   1.0f, 0.0f,
-    //     -0.5f,  0.5f, -0.5f,   0.0f, 0.7f, 0.7f,   1.0f, 1.0f,
-    //     -0.5f, -0.5f, -0.5f,   0.0f, 0.7f, 0.7f,   0.0f, 1.0f,
-    //     -0.5f, -0.5f, -0.5f,   0.7f, 0.0f, 0.7f,   0.0f, 1.0f,
-    //     -0.5f, -0.5f,  0.5f,   0.7f, 0.0f, 0.7f,   0.0f, 0.0f,
-    //     -0.5f,  0.5f,  0.5f,   0.7f, 0.0f, 0.7f,   1.0f, 0.0f,
+    // render
+    // ------
+    glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // also clear the depth buffer now!
 
-    //      0.5f,  0.5f,  0.5f,   0.7f, 0.0f, 0.7f,   1.0f, 0.0f,
-    //      0.5f,  0.5f, -0.5f,   0.7f, 0.0f, 0.7f,   1.0f, 1.0f,
-    //      0.5f, -0.5f, -0.5f,   0.7f, 0.0f, 0.7f,   0.0f, 1.0f,
-    //      0.5f, -0.5f, -0.5f,   0.0f, 0.7f, 0.7f,   0.0f, 1.0f,
-    //      0.5f, -0.5f,  0.5f,   0.0f, 0.7f, 0.7f,   0.0f, 0.0f,
-    //      0.5f,  0.5f,  0.5f,   0.0f, 0.7f, 0.7f,   1.0f, 0.0f,
+    // activate shader
+    ourShader.use();
 
-    //     -0.5f, -0.5f, -0.5f,   0.7f, 0.7f, 0.7f,   0.0f, 1.0f,
-    //      0.5f, -0.5f, -0.5f,   0.7f, 0.7f, 0.7f,   1.0f, 1.0f,
-    //      0.5f, -0.5f,  0.5f,   0.7f, 0.7f, 0.7f,   1.0f, 0.0f,
-    //      0.5f, -0.5f,  0.5f,   0.0f, 0.7f, 0.7f,   1.0f, 0.0f,
-    //     -0.5f, -0.5f,  0.5f,   0.0f, 0.7f, 0.7f,   0.0f, 0.0f,
-    //     -0.5f, -0.5f, -0.5f,   0.0f, 0.7f, 0.7f,   0.0f, 1.0f,
+    // create transformations
+    glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
+    glm::mat4 view = glm::mat4(1.0f);
+    glm::mat4 projection = glm::mat4(1.0f);
 
-    //     -0.5f,  0.5f, -0.5f,   0.0f, 0.7f, 0.7f,   0.0f, 1.0f,
-    //      0.5f,  0.5f, -0.5f,   0.0f, 0.7f, 0.7f,   1.0f, 1.0f,
-    //      0.5f,  0.5f,  0.5f,   0.0f, 0.7f, 0.7f,   1.0f, 0.0f,
-    //      0.5f,  0.5f,  0.5f,   0.7f, 0.0f, 0.7f,   1.0f, 0.0f,
-    //     -0.5f,  0.5f,  0.5f,   0.7f, 0.0f, 0.7f,   0.0f, 0.0f,
-    //     -0.5f,  0.5f, -0.5f,   0.7f, 0.0f, 0.7f,   0.0f, 1.0f,
-    // };
+    // movimenta o modelo 0.8 unidades no eixo y
+    model = glm::translate(model, glm::vec3(0.0f, 0.8f, 0.0f));
 
-    unsigned int VBO, VAO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
+    // Gira o modelo ao redor do eixo y
+    model = glm::rotate(model, (float)glfwGetTime() / velocidade, glm::vec3(0.0f, -0.5f, 0.0f));
 
+    // afasta o objetoo do observador e o coloca um pouco abaixo dele,
+    // para um ponto de vista mais elevado do objeto
+    view = glm::translate(view, glm::vec3(0.0f, -0.7f, -3.0f));
+
+    projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+    // retrieve the matrix uniform locations
+    unsigned int modelLoc = glGetUniformLocation(ourShader.ID, "model");
+    unsigned int viewLoc = glGetUniformLocation(ourShader.ID, "view");
+    // pass them to the shaders (3 different ways)
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+    glUniformMatrix4fv(viewLoc, 1, GL_FALSE, &view[0][0]);
+    // note: currently we set the projection matrix each frame, but since the projection matrix rarely changes it's often best practice to set it outside the main loop only once.
+    ourShader.setMat4("projection", projection);
+
+    // render box
     glBindVertexArray(VAO);
 
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * points.size(), (const void *)&points[0], GL_STATIC_DRAW);
+    glDrawArrays(GL_TRIANGLES, 0, 420);
 
-    // position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-    // color attribute
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-    // texture coord attribute
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(2);
+    // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
+    // -------------------------------------------------------------------------------
+    glfwSwapBuffers(window);
+    glfwPollEvents();
+    // glfwWaitEvents();
+  }
 
-    // Manda desenhar somente wireframe
-    if(!preenchimento) {
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    }
+  // optional: de-allocate all resources once they've outlived their purpose:
+  // ------------------------------------------------------------------------
+  glDeleteVertexArrays(1, &VAO);
+  glDeleteBuffers(1, &VBO);
 
-    // render loop
-    // -----------
-    while (!glfwWindowShouldClose(window))
-    {
-
-
-        // input
-        // -----
-        processInput(window);
-
-        // render
-        // ------
-        glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // also clear the depth buffer now!
-
-        // activate shader
-        ourShader.use();
-
-        // create transformations
-        glm::mat4 model         = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
-        glm::mat4 view          = glm::mat4(1.0f);
-        glm::mat4 projection    = glm::mat4(1.0f);
-
-        // movimenta o modelo 0.8 unidades no eixo y
-        model = glm::translate(model,glm::vec3(0.0f,0.8f,0.0f));
-
-        // Gira o modelo ao redor do eixo y
-        model = glm::rotate(model, (float)glfwGetTime() / velocidade, glm::vec3(0.0f, -0.5f, 0.0f));
-
-        // afasta o objetoo do observador e o coloca um pouco abaixo dele,
-        // para um ponto de vista mais elevado do objeto
-        view  = glm::translate(view, glm::vec3(0.0f, -0.7f, -3.0f));
-
-        projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-        // retrieve the matrix uniform locations
-        unsigned int modelLoc = glGetUniformLocation(ourShader.ID, "model");
-        unsigned int viewLoc  = glGetUniformLocation(ourShader.ID, "view");
-        // pass them to the shaders (3 different ways)
-        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, &view[0][0]);
-        // note: currently we set the projection matrix each frame, but since the projection matrix rarely changes it's often best practice to set it outside the main loop only once.
-        ourShader.setMat4("projection", projection);
-
-        // render box
-        glBindVertexArray(VAO);
-
-        glDrawArrays(GL_TRIANGLES, 0, 420);
-
-        // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
-        // -------------------------------------------------------------------------------
-        glfwSwapBuffers(window);
-        glfwPollEvents();
-        //glfwWaitEvents();
-    }
-
-    // optional: de-allocate all resources once they've outlived their purpose:
-    // ------------------------------------------------------------------------
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
-
-    // glfw: terminate, clearing all previously allocated GLFW resources.
-    // ------------------------------------------------------------------
-    glfwTerminate();
-    return 0;
+  // glfw: terminate, clearing all previously allocated GLFW resources.
+  // ------------------------------------------------------------------
+  glfwTerminate();
+  return 0;
 }
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 // ---------------------------------------------------------------------------------------------------------
 void processInput(GLFWwindow *window)
 {
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, true);
+  if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+    glfwSetWindowShouldClose(window, true);
 
-    if (glfwGetKey(window, GLFW_KEY_KP_SUBTRACT) == GLFW_PRESS) {
-        if(quantosVertices>MIN_VERTICES) {
-            quantosVertices--;
-        }
+  if (glfwGetKey(window, GLFW_KEY_KP_SUBTRACT) == GLFW_PRESS)
+  {
+    if (quantosVertices > MIN_VERTICES)
+    {
+      quantosVertices--;
     }
-    if (glfwGetKey(window, GLFW_KEY_KP_ADD) == GLFW_PRESS) {
-        if(quantosVertices<MAX_VERTICES) {
-            quantosVertices++;
-        }
+  }
+  if (glfwGetKey(window, GLFW_KEY_KP_ADD) == GLFW_PRESS)
+  {
+    if (quantosVertices < MAX_VERTICES)
+    {
+      quantosVertices++;
     }
+  }
 
-    if (glfwGetKey(window, GLFW_KEY_KP_MULTIPLY) == GLFW_PRESS) {
-        if(velocidade>MIN_VELOCIDADE) {
-            velocidade--;
-        }
+  if (glfwGetKey(window, GLFW_KEY_KP_MULTIPLY) == GLFW_PRESS)
+  {
+    if (velocidade > MIN_VELOCIDADE)
+    {
+      velocidade--;
     }
-    if (glfwGetKey(window, GLFW_KEY_KP_DIVIDE) == GLFW_PRESS) {
-        if(velocidade<MAX_VELOCIDADE) {
-            velocidade++;
-        }
+  }
+  if (glfwGetKey(window, GLFW_KEY_KP_DIVIDE) == GLFW_PRESS)
+  {
+    if (velocidade < MAX_VELOCIDADE)
+    {
+      velocidade++;
     }
+  }
 
-
-     if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) {
-        if(preenchimento) {
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        } else {
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        }
-        preenchimento = !preenchimento;
+  if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS)
+  {
+    if (preenchimento)
+    {
+      glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
+    else
+    {
+      glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    }
+    preenchimento = !preenchimento;
+  }
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
 // ---------------------------------------------------------------------------------------------
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+void framebuffer_size_callback(GLFWwindow *window, int width, int height)
 {
-    // make sure the viewport matches the new window dimensions; note that width and
-    // height will be significantly larger than specified on retina displays.
-    glViewport(0, 0, width, height);
+  // make sure the viewport matches the new window dimensions; note that width and
+  // height will be significantly larger than specified on retina displays.
+  glViewport(0, 0, width, height);
 }
-
