@@ -18,7 +18,6 @@ const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
 unsigned int VBO, VAO;
-unsigned int texture1, texture2;
 
 const int MIN_VERTICES = 0;
 const int MAX_VERTICES = 45;
@@ -131,37 +130,6 @@ std::string readTextureLocationFromFile(const std::string &filename)
   return line;
 }
 
-int load_texture(const std::string &texture_filename)
-{
-  glGenTextures(1, &texture1);
-  glBindTexture(GL_TEXTURE_2D, texture1);
-  // set the texture wrapping parameters
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  // set texture filtering parameters
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  // load image, create texture and generate mipmaps
-  int width, height, nrChannels;
-  stbi_set_flip_vertically_on_load(
-      true); // tell stb_image.h to flip loaded texture's on the y-axis.
-  unsigned char *data =
-      stbi_load(texture_filename.c_str(), &width, &height, &nrChannels, 0);
-  if (data)
-  {
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
-                 GL_UNSIGNED_BYTE, data);
-    glGenerateMipmap(GL_TEXTURE_2D);
-  }
-  else
-  {
-    std::cout << "Failed to load texture" << std::endl;
-  }
-  stbi_image_free(data);
-
-  return 1;
-}
-
 int main(int argc, char *argv[])
 {
 
@@ -211,7 +179,7 @@ int main(int argc, char *argv[])
 
   std::vector<float> points = readVerticesFromFile(fileName);
   std::string textureFile = readTextureLocationFromFile(fileName);
-
+  std::cout << "Texture file: " << textureFile << std::endl;
   // build and compile our shader zprogram
   // ------------------------------------
   Shader ourShader("/home/marcello/Repositories/CSV-Shadder/shaders/vertex.glsl", "/home/marcello/Repositories/CSV-Shadder/shaders/fragment.glsl");
@@ -240,11 +208,41 @@ int main(int argc, char *argv[])
   glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(3 * sizeof(float)));
   glEnableVertexAttribArray(2);
 
-  // Manda desenhar somente wireframe
-  if (!preenchimento)
+  unsigned int texture1, texture2;
+  glGenTextures(1, &texture1);
+  glBindTexture(GL_TEXTURE_2D, texture1);
+  // set the texture wrapping parameters
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  // set texture filtering parameters
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  // load image, create texture and generate mipmaps
+  int width, height, nrChannels;
+  stbi_set_flip_vertically_on_load(
+      true); // tell stb_image.h to flip loaded texture's on the y-axis.
+  unsigned char *data =
+      stbi_load(textureFile.c_str(), &width, &height, &nrChannels, 0);
+  if (data)
   {
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
+                 GL_UNSIGNED_BYTE, data);
+    glGenerateMipmap(GL_TEXTURE_2D);
   }
+  else
+  {
+    std::cout << "Failed to load texture" << std::endl;
+  }
+  stbi_image_free(data);
+
+  ourShader.use();
+  ourShader.setInt("texture1", 0);
+  ourShader.setInt("texture2", 1);
+
+  // if (!preenchimento)
+  // {
+  //   glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+  // }
 
   // render loop
   // -----------
@@ -259,6 +257,9 @@ int main(int argc, char *argv[])
     // ------
     glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // also clear the depth buffer now!
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture1);
 
     // activate shader
     ourShader.use();
@@ -287,6 +288,9 @@ int main(int argc, char *argv[])
     glUniformMatrix4fv(viewLoc, 1, GL_FALSE, &view[0][0]);
     // note: currently we set the projection matrix each frame, but since the projection matrix rarely changes it's often best practice to set it outside the main loop only once.
     ourShader.setMat4("projection", projection);
+
+    ourShader.use();
+    ourShader.setInt("texture1", 0);
 
     // render box
     glBindVertexArray(VAO);
